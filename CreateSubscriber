@@ -1,0 +1,45 @@
+<script runat="server" language="JavaScript"> 
+  Platform.Load("core", "1.1.1");
+  var MID = Platform.Request.GetFormField("MID");
+  var SubKey = Platform.Request.GetFormField("SubKey");
+  var SubStatus = Platform.Request.GetFormField("SubStatus");
+  var EmailAddress = Platform.Request.GetFormField("EmailAddress");
+  var AllSubListId = Platform.Request.GetFormField("AllSubListId");
+  try
+  {
+    var prox = new Script.Util.WSProxy();
+    
+    prox.resetClientIds();
+    prox.setClientId({ "ID": MID });
+    
+    var cols= ["EmailAddress","SubscriberKey","Status","ID","UnsubscribedDate","EmailTypePreference"];
+    var filter= {Property: "SubscriberKey", SimpleOperator: "equals", Value: SubKey };
+    var resp = prox.retrieve("Subscriber",cols,filter);
+    var NumberofSubscriber = resp.Results.length;
+    if(resp.Results.length>0){
+      var ResponseBody = {"Message":"Subscriber : "+ SubKey+" already exists"};
+      Write(Stringify(ResponseBody));
+    }else
+    {
+       var sub = {
+         SubscriberKey: SubKey,
+         EmailAddress: EmailAddress,
+         Status:SubStatus,
+         Lists: [{
+           ID: AllSubListId,
+           Status: SubStatus}]};
+      
+      var options = {SaveOptions: [{PropertyName: "*",SaveAction: "UpdateAdd"}]};
+      var resp = prox.createItem("Subscriber", sub, options);
+      Write("Response: " + Stringify(resp));
+    }
+    
+    
+  }catch(e)
+  {
+    var exError ={
+      "Error":e
+    };
+    Write(Stringify(exError));
+  }
+</script>
